@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <link rel="stylesheet" href="style.css" type="text/css" media="all" />
+  </head>
+
+  <body>
+    <h2>Telemetry</h2>
+  <div>
+   <span class="label label-big">Speed</span><span id="speed" class="value value-big">-</span>
+   <span class="unit unit-big">mph</span><br>
+   <span class="label label-medium">Engine Temp</span><span id="temp_engine" class="value value-medium">-</span>
+   <span class="unit unit-small">°C</span><br>
+   <span class="label label-medium">Air Intake</span><span id="temp_air_intake" class="value value-medium">-</span>
+   <span class="unit unit-small">°C</span><br>
+   <span class="label label-small">Battery</span><span id="voltage" class="value value-small">-</span>
+   <span class="unit unit-small">V</span><br>
+  </div>
+
+    <pre id="output"></pre>
+
+    <script>
+      url = 'ws://52.8.87.194/ws/telemetry_out';
+
+      function connectWS() {
+        c = new WebSocket(url);
+        c.onclose = function (event) {
+            setTimeout(function(){
+              connectWS();
+            }, 2000);
+        }  
+      
+        c.onmessage = function(msg){
+          var data = jQuery.parseJSON(msg.data);
+          $("#speed").text(data['Speed']);
+          $("#temp_engine").text(data['CoolantTemp']);
+          $("#temp_air_intake").text(data['TempAirIntake']);
+          $("#voltage").text(data['Voltage']);
+        }
+    }
+    connectWS();
+
+    </script>
+
+  </body>
+</html>
