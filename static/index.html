@@ -10,10 +10,12 @@
   <div>
    <span class="label label-big">Speed</span><span id="speed" class="value value-big">-</span>
    <span class="unit unit-big">mph</span><br>
+   <span class="label label-medium">RPM</span><span id="rpm" class="value value-medium">-</span>
+   <span class="unit unit-medium">RPM</span><br>
    <span class="label label-medium">Engine Temp</span><span id="temp_engine" class="value value-medium">-</span>
-   <span class="unit unit-small">°C</span><br>
+   <span class="unit unit-medium">°C</span><br>
    <span class="label label-medium">Air Intake</span><span id="temp_air_intake" class="value value-medium">-</span>
-   <span class="unit unit-small">°C</span><br>
+   <span class="unit unit-medium">°C</span><br>
    <span class="label label-small">Battery</span><span id="voltage" class="value value-small">-</span>
    <span class="unit unit-small">V</span><br>
   </div>
@@ -34,6 +36,7 @@
         c.onmessage = function(msg){
           var data = jQuery.parseJSON(msg.data);
           $("#speed").text(data['Speed']);
+          $("#rpm").text(data['RPM']);
           $("#temp_engine").text(data['CoolantTemp']);
           $("#temp_air_intake").text(data['TempAirIntake']);
           $("#voltage").text(data['Voltage']);
