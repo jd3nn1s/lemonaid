@@ -178,6 +178,7 @@ func main() {
 		WebSocketOutgoingHandler(w, req, channel)
 		delChannel <- channel
 	})
+	RegisterSiteHandlers(r)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	http.Handle("/", r)
 
