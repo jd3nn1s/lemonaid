@@ -4,3 +4,14 @@ body {
 .lemonaid-template {
   padding: 40px 15px;
 }
+
+.gauge-lg {
+  width: 400px;
+  height: 320px;
+  display: inline-block;
+}
+.gauge-md {
+  width: 200px;
+  height: 160px;
+  display: inline-block;
+}

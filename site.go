@@ -15,6 +15,7 @@ type NavItem struct {
 var NavItems = []NavItem {
     {"/", "Home", "Thomas the (LeMon) Tank Engine"},
 	{"/about", "About", "About Thomas the LeMon"},
+	{"/dashboard", "Telemetry", "Telemetry Dashboard"},
 }
 
 func getCurrentPage(req *http.Request) *NavItem{
@@ -31,6 +32,30 @@ func getCurrentPage(req *http.Request) *NavItem{
 func RegisterSiteHandlers(r *mux.Router) {
     r.HandleFunc("/", HomeHandler)
     r.HandleFunc("/about", AboutHandler)
+	r.HandleFunc("/dashboard", TelemetryHandler)
+}
+
+func TelemetryHandler(w http.ResponseWriter, req *http.Request) {
+	if err := WriteHeader(w, req); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	body, err := template.ParseFiles("templates/telemetry.html")
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	if err := body.Execute(w, ""); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	if err := WriteFooter(w, req); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
 }
 
 func HomeHandler(w http.ResponseWriter, req *http.Request) {

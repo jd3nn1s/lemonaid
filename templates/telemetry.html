@@ -1,0 +1,108 @@
+        <div id="alertTelemetry" class="alert alert-danger hide" role="alert"><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> Telemetry is not currently being received from Thomas</div>
+        <div id="alertConnection" class="alert alert-danger hide" role="alert" ><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> Connection to server lost. Reconnecting...</div>
+        <div class="row">
+          <div class="col-xs-6"><div id="speedGauge"></div></div>
+          <div class="col-xs-6"><div id="rpmGauge"></div></div>
+        </div>
+        <div class="row">
+          <div class="col-xs-4"><div id="coolantGauge"></div></div>
+          <div class="col-xs-4"><div id="voltageGauge"></div></div>
+          <div class="col-xs-4"><div id="intakeTempGauge"></div></div>
+        </div>
+        <script src="/static/raphael.2.1.0.min.js"></script>
+        <!-- <script src="/static/justgage.1.0.1.min.js"></script> -->
+        <script src="http://justgage.com/justgage.js"></script>
+        <script>
+          var speedGauge = new JustGage({
+            id: "speedGauge",
+            value: 0,
+            min: 0,
+            max: 130,
+            title: "Speed",
+            label: "MPH",
+            relativeGaugeSize: true,
+            levelColors: ["#000"],
+          });
+
+          var rpmGauge = new JustGage({
+            id: "rpmGauge",
+            value: 0,
+            min: 0,
+            max: 7000,
+            title: "RPM",
+            relativeGaugeSize: true,
+            levelColors: ["#8AD60A", "#8AD60A", "#8AD60A", "#8AD60A", "#8AD60A", "#FF5500", "#FF0000"]
+          });
+
+          var coolantGauge = new JustGage({
+            id: "coolantGauge",
+            value: 0,
+            min: 30,
+            max: 130,
+            title: "Coolant Temp",
+            label: "ºC",
+            relativeGaugeSize: true,
+            levelColors: ["#00008A", "#00008A", "#00008A", "#8AD60A", "#8AD60A", "#8AD60A", "#8AD60A", "#FB8300", "#FF0000", "#FF0000"]
+          });
+
+          var voltageGauge = new JustGage({
+            id: "voltageGauge",
+            value: 0,
+            min: 0,
+            max: 20,
+            title: "Voltage",
+            label: "V",
+            relativeGaugeSize: true,
+            levelColors: ["#FF0000", "#FF0000", "#FF0000", "#FF0000", "#FF0000", "#8AD60A", "#8AD60A", "#FF0000", "#FF0000", "#FF0000"]
+          });
+
+          var intakeGauge = new JustGage({
+            id: "intakeTempGauge",
+            value: 0,
+            min: 10,
+            max: 80,
+            title: "Air Intake Temp",
+            relativeGaugeSize: true,
+            label: "ºC"
+          });
+
+          url = 'ws://www.24hoursoflemonaid.com/ws/telemetry_out';
+
+          function showTelemetryAlert() {
+            $("#alertTelemetry").removeClass('hide');
+          }
+          var telemetryTimeout = -1;
+
+          function connectWS() {
+            c = new WebSocket(url);
+            c.onopen = function (event) {
+              $("#alertConnection").addClass('hide');
+              telemetryTimeout = window.setTimeout(showTelemetryAlert, 2000);
+            }
+            c.onclose = function (event) {
+              $("#alertConnection").removeClass('hide');
+              $("#alertTelemetry").addClass('hide');
+
+              if (telemetryTimeout != -1)
+                  window.clearTimeout(telemetryTimeout);
+
+              setTimeout(function() {
+                connectWS();
+              }, 2000);
+          }  
+      
+          c.onmessage = function(msg) {
+            var data = jQuery.parseJSON(msg.data);
+            $("#alertTelemetry").addClass('hide');
+            window.clearTimeout(telemetryTimeout);
+            telemetryTimeout = window.setTimeout(showTelemetryAlert, 2000);
+            speedGauge.refresh(data['Speed']);
+            rpmGauge.refresh(data['RPM']);
+            coolantGauge.refresh(data['CoolantTemp']);
+            voltageGauge.refresh(data['Voltage']);
+            intakeGauge.refresh(data['TempAirIntake']);
+          }
+        }
+        connectWS();
+
+        </script>
