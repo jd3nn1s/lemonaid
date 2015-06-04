@@ -1,17 +1,29 @@
-body {
-  padding-top: 50px;
+html, body {
+  height: 100%;
 }
 .lemonaid-template {
-  padding: 40px 15px;
+  padding: 60px 15px;
 }
 
-.gauge-lg {
-  width: 400px;
-  height: 320px;
-  display: inline-block;
+.carousel,
+.item,
+.active {
+    height: 100%;
 }
-.gauge-md {
-  width: 200px;
-  height: 160px;
-  display: inline-block;
+
+.carousel-inner {
+    height: 100%;
 }
+
+/* Background images are set within the HTML using inline CSS, not here */
+
+.fill {
+    width: 100%;
+    height: 100%;
+    background-position: center;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    background-size: cover;
+    -o-background-size: cover;
+}
+

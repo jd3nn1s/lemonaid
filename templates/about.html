@@ -1,6 +1,34 @@
+    <!-- Full Page Image Background Carousel Header -->
+    <header id="myCarousel" class="carousel slide">
+        <!-- Indicators -->
+        <ol class="carousel-indicators">
+            {{range $index, $element := .Images}}
+            <li data-target="#myCarousel" data-slide-to="{{$index}}"{{if eq $index 0}} class="active"{{end}}></li>
+            {{end}}
+        </ol>
+
+        <!-- Wrapper for Slides -->
+        <div class="carousel-inner">
+            {{range $index, $e := .Images}}
+            <div class="item{{if eq $index 0}} active{{end}}">
+                <!-- Set the first background image using inline CSS below. -->
+                <div class="fill" style="background-image:url('{{$e.Path}}');"></div>
+                <div class="carousel-caption">
+                    <h2>{{$e.Title}}</h2>
+                    <p>{{$e.Caption}}</p>
+                </div>
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Controls -->
+        <a class="left carousel-control" href="#myCarousel" data-slide="prev">
+            <span class="icon-prev"></span>
+        </a>
+        <a class="right carousel-control" href="#myCarousel" data-slide="next">
+            <span class="icon-next"></span>
+        </a>
+
+    </header>
     <div class="container">
-      <div class="lemonaid-template">
-        <h1>About Thomas</h1>
-        <p>A fine example of a good LeMon's vintage, Thomas, is a 1995 Volkswagen Jetta MK3 with a 2.8L VR6 engine.</p>
-      </div>
     </div>
