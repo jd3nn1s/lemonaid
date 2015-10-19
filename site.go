@@ -7,24 +7,25 @@ import (
 )
 
 type NavItem struct {
-	Path string
-	Name string
+	Path  string
+	Name  string
 	Title string
 }
 
-var NavItems = []NavItem {
-    {"/", "Home", "Thomas the (LeMon) Tank Engine"},
+var NavItems = []NavItem{
+	{"/", "Home", "Thomas the (LeMon) Tank Engine"},
 	{"/about", "About", "About Thomas the LeMon"},
 	{"/dashboard", "Telemetry", "Telemetry Dashboard"},
+	{"/dashboard2", "Telemetry 2", "Telemetry Dashboard 2"},
 }
 
 type CarouselItem struct {
-	Path string
-	Title string
+	Path    string
+	Title   string
 	Caption string
 }
 
-var CarouselItems = []CarouselItem {
+var CarouselItems = []CarouselItem{
 	{"/static/photos/car1.jpg", "Day Zero", "After a sight-unseen purchase the 1995 mk3 Volkswagen Jetta completes its first task; getting home regardless of the oil hanging off its engine."},
 	{"/static/photos/car2.jpg", "Day Zero", "The first surprise of the purchase was that we hadn't bought a 2.slow, but in fact a VR6 (not that it's fast mind you)."},
 	{"/static/photos/car3.jpg", "Light Sunday Drive", "Stripping out all the interior for weight, and selling the many surprising parts lurking in the car kept us in our $500 LeMons budget."},
@@ -37,8 +38,8 @@ var CarouselItems = []CarouselItem {
 	{"/static/photos/car10.jpg", "Pick-n-Pull", "This white Jetta never saw us coming. We thank it for its contribution to Thomas' rebirth."},
 }
 
-func getCurrentPage(req *http.Request) *NavItem{
-	for _, page := range(NavItems) {
+func getCurrentPage(req *http.Request) *NavItem {
+	for _, page := range NavItems {
 		if req.URL.Path == page.Path {
 			return &page
 		}
@@ -49,9 +50,10 @@ func getCurrentPage(req *http.Request) *NavItem{
 }
 
 func RegisterSiteHandlers(r *mux.Router) {
-    r.HandleFunc("/", HomeHandler)
-    r.HandleFunc("/about", AboutHandler)
+	r.HandleFunc("/", HomeHandler)
+	r.HandleFunc("/about", AboutHandler)
 	r.HandleFunc("/dashboard", TelemetryHandler)
+	r.HandleFunc("/dashboard2", Telemetry2Handler)
 }
 
 func TelemetryHandler(w http.ResponseWriter, req *http.Request) {
@@ -61,6 +63,29 @@ func TelemetryHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	body, err := template.ParseFiles("templates/telemetry.html")
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	if err := body.Execute(w, ""); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	if err := WriteFooter(w, req); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+}
+
+func Telemetry2Handler(w http.ResponseWriter, req *http.Request) {
+	if err := WriteHeader(w, req); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	body, err := template.ParseFiles("templates/telemetry2.html")
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
@@ -106,7 +131,7 @@ func AboutHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-    data := struct {
+	data := struct {
 		Images *[]CarouselItem
 	}{
 		&CarouselItems,
@@ -138,8 +163,8 @@ func WriteHeader(w http.ResponseWriter, req *http.Request) error {
 	current := getCurrentPage(req)
 
 	data := struct {
-           CurrentPage *NavItem
-		NavItems *[]NavItem
+		CurrentPage *NavItem
+		NavItems    *[]NavItem
 	}{
 		current,
 		&NavItems,

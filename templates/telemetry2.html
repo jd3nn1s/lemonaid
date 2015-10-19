@@ -1,0 +1,344 @@
+<div class="container-fluid">
+  <div class="lemonaid-template">
+    <div class="col-xs-12 col-sm-4">
+      <div id="alertTelemetry" class="alert alert-danger hide" role="alert"><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> Telemetry is not currently being received</div>
+      <div id="alertConnection" class="alert alert-danger hide" role="alert"><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> Connection to server lost. Reconnecting...</div>
+      <div id="alertNoRace" class="alert alert-info hide"><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> There is currently no race information available</div>
+      <div class="row">
+        <div class="col-xs-6">
+          <span id="Speed" class="mph-value">90</span><span class="mph-units">MPH</span>
+        </div>
+        <div class="col-xs-6">
+          <span id="RPM" class="rpm-value">3000</span><span class="rpm-units">RPM</span>
+        </div>
+      </div>
+      <div class="row">
+        <table class="table table-striped">
+          <tbody>
+            <tr class="danger">
+              <td>Coolant Temp</td>
+              <td><span id="CoolantTemp">60.2</span> &deg;C</td>
+            </tr>
+            <tr class="warning">
+              <td>Oil Temp</td>
+              <td><span id="OilTemp">102.5</span> &deg;C</td>
+            </tr>
+            <tr class="success">
+              <td>Battery</td>
+              <td><span id="BatteryVoltage">11.3</span>V</td>
+            </tr>
+            <tr class="success">
+              <td>Air Intake Temp</td>
+              <td><span id="AirIntakeTemp">20.5</span> &deg;C</td>
+            </tr>
+            <tr class="success">
+              <td>Fuel Remaining</td>
+              <td><span id="FuelRemaining">30</span>%</td>
+            </tr>
+            <tr class="info">
+              <td>Gas Pedal Angle</td>
+              <td><span id="GasPedalAngle">30</span>&deg;</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="row">
+        <table class="table table-striped">
+          <tbody id="TelemetryTable">
+            <tr>
+              <td>Laps</td>
+              <td><span id="LapCount">15</span></td>
+            </tr>
+            <tr>
+              <td>Last Lap</td>
+              <td><span id="LastLap">1:15.03</span></td>
+            </tr>
+            <tr>
+              <td>Best Lap</td>
+              <td><span id="BestLap">1:13.01</span></td>
+            </tr>
+            <tr>
+              <td style="padding: 15px"></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Team Ahead</td>
+              <td><span id="TeamAheadName">Buncha Cheaters</span></td>
+            </tr>
+            <tr>
+              <td>Laps</td>
+              <td><span id="TeamAheadLapCount">16</span></td>
+            </tr>
+            <tr>
+              <td>Last Lap</td>
+              <td><span id="TeamAheadLastLap">1:15.10</span></td>
+            </tr>
+            <tr>
+              <td>Split</td>
+              <td><span id="TeamAheadSplit">0:24.10</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="col-sm-8 fill-height-or-more" style="height: 100%">
+      <div id="map-container"></div>
+      <div class="embed-responsive text-center">
+        <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/2aA2SHda-8M?start=986&autoplay=1" frameborder="0" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+var url = 'ws://www.24hoursoflemonaid.com/ws/telemetry_out';
+var position = [35.488151852742455, -119.53969199955463];
+var follow = true;
+var marker = null;
+
+function showTelemetryAlert() {
+  $("#alertTelemetry").removeClass('hide');
+}
+var telemetryTimeout = -1;
+
+function connectWS() {
+  c = new WebSocket(url);
+  c.onopen = function(event) {
+    $("#alertConnection").addClass('hide');
+    telemetryTimeout = window.setTimeout(showTelemetryAlert, 2000);
+  }
+  c.onclose = function(event) {
+    $("#alertConnection").removeClass('hide');
+    $("#alertTelemetry").addClass('hide');
+
+    if (telemetryTimeout != -1)
+      window.clearTimeout(telemetryTimeout);
+
+    setTimeout(function() {
+      connectWS();
+    }, 2000);
+  }
+
+  c.onmessage = function(msg) {
+    var data = jQuery.parseJSON(msg.data);
+    $("#alertTelemetry").addClass('hide');
+    window.clearTimeout(telemetryTimeout);
+    telemetryTimeout = window.setTimeout(showTelemetryAlert, 2000);
+    if (data['Type'] == "telemetry") {
+      processTelemetry(data['Data']);
+    }
+    else if (data['Type'] == "timing") {
+      processTiming(data['Data']);
+    }
+  }
+}
+connectWS();
+
+function processTelemetry(data) {
+  var tableFields = [
+    "AirIntakeTemp",
+    "BatteryVoltage",
+    "CoolantTemp",
+    "FuelRemaining",
+    "OilTemp",
+    "GasPedalAngle"
+  ];
+
+  var otherFields = [
+    "Speed",
+    "RPM"
+  ]
+
+  var l = tableFields.length;
+
+  var lastError = null;
+  var lastWarning = null;
+  var lastOK = null;
+
+  for (var i=0; i < l; i++) {
+    var node = $("#" + tableFields[i]);
+    var tr = node.parent().parent();
+    var trParent = tr.parent();
+    tr.removeClass("success warning danger");
+    if (data[tableFields[i]] === undefined) {
+      console.log("Undefined telemetry field " + tableFields[i]);
+      tr.removeClass("success warning");
+      tr.addClass("danger");
+      node.text("~");
+    }
+    else {
+      node.text(data[tableFields[i]]);
+      var fn = function (obj) {
+        return obj === fields[i];
+      };
+      if (data["ErrorFields"] !== undefined && data["ErrorFields"].filter(fn)[0]) {
+        tr.addClass("danger");
+
+        if (lastError === null) {
+          tr.prependTo(trParent);
+        }
+        else {
+          tr.insertAfter(lastError);
+        }
+        lastError = tr;
+      }
+      else if (data["WarningFields"] !== undefined && data["WarningFields"].filter(fn)[0]) {
+        tr.addClass("warning");
+        if (lastWarning === null) {
+          if (lastError === null)
+            tr.prependTo(trParent);
+          else
+            tr.insertAfter(lastError);
+        }
+        else {
+          tr.insertAfter(lastWarning);
+        }
+        lastWarning = tr;
+      }
+      else if (!tr.hasClass("info")) {
+        tr.addClass("success");
+        if (lastOK === null) {
+          if (lastWarning === null) {
+            if (lastError === null)
+              tr.prependTo(trParent);
+            else
+              tr.insertAfter(lastError);
+          }
+          else {
+            tr.insertAfter(lastWarning);
+          }          
+        }
+        else
+          tr.insertAfter(lastOK);
+        lastOK = tr;
+      }
+    }
+  }
+
+  l = otherFields.length;
+
+  for (var i=0; i < l; i++) {
+    var node = $("#" + otherFields[i]);
+    if (data[otherFields[i]] === undefined) {
+      console.log("Undefined telemetry field " + otherFields[i]);
+      node.text("~");
+    }
+
+    node.text(data[otherFields[i]]);
+  }
+
+
+  position = [data["Latitude"], data["Longitude"]];
+  setMarker();
+}
+
+function processTiming(data) {
+  $("#bestLap").text(data['BestLap'])
+  $("#lastLap").text(data['LastLap'])
+  $("#laps").text(data['LapCount'])
+  var fields = [
+    "LapCount",
+    "LastLap",
+    "BestLap",
+    "TeamAheadName",
+    "TeamAheadLapCount",
+    "TeamAheadLastLap",
+    "TeamAheadSplit"
+  ];
+  var l = fields.length;
+
+  for (var i=0; i < l; i++) {
+    if (data[fields[i]] === undefined) {
+      // allow records that only update some of the timing
+      continue;
+    }
+
+    $("#" + fields[i]).text(data[fields[i]]);
+  }
+}
+
+$(document).ready(function() {
+  google.maps.event.addDomListener(window, 'load', initialize);
+
+  function initialize() {
+    var mapOptions = {
+      zoom: 18,
+      center: new google.maps.LatLng(35.49135782742357, -119.54446633160113),
+      mapTypeId: google.maps.MapTypeId.HYBRID,
+      streetViewControl: false,
+      mapTypeControl: false,
+      panControl: false
+    }
+    map = new google.maps.Map(document.getElementById('map-container'),
+      mapOptions);
+
+    var followControlDiv = document.createElement('div');
+    var followControl = new FollowControl(followControlDiv, map);
+
+    followControlDiv.index = 1;
+    map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(followControlDiv);
+
+    setMarker();
+  }
+});
+
+function setMarker() {
+  if (marker === null) {
+    var image = {
+      url: '/static/thomas.png',
+      size: new google.maps.Size(35, 35),
+      origin: new google.maps.Point(0, 0),
+      anchor: new google.maps.Point(17, 17)
+    };
+    var myLatLng = new google.maps.LatLng(position[0], position[1]);
+    marker = new google.maps.Marker({
+      position: myLatLng,
+      map: map,
+      icon: image,
+      title: "Thomas",
+    });
+    map.panTo(marker.getPosition());
+  }
+  else {
+    marker.setPosition(new google.maps.LatLng(position[0], position[1]));
+  }
+  if (follow)
+    map.panTo(marker.getPosition());
+}
+
+function FollowControl(controlDiv, map) {
+
+  // Set CSS for the control border
+  var controlUI = document.createElement('div');
+  controlUI.style.backgroundColor = '#fff';
+  controlUI.style.border = '2px solid #fff';
+  controlUI.style.borderRadius = '3px';
+  controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+  controlUI.style.cursor = 'pointer';
+  controlUI.style.marginBottom = '10px';
+  controlUI.style.marginLeft = '5px';
+  controlUI.style.textAlign = 'center';
+  controlUI.title = 'Click to toggle automatic following of Thomas';
+  controlDiv.appendChild(controlUI);
+
+  // Set CSS for the control interior
+  var controlText = document.createElement('div');
+  controlText.style.color = 'rgb(25,25,25)';
+  controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+  controlText.style.fontSize = '16px';
+  controlText.style.lineHeight = '38px';
+  controlText.style.paddingLeft = '5px';
+  controlText.style.paddingRight = '5px';
+  controlText.innerHTML = 'Manual Pan';
+  controlUI.appendChild(controlText);
+
+  google.maps.event.addDomListener(controlUI, 'click', function() {
+    follow = !follow;
+    if (follow)
+      controlText.innerHTML = 'Manual Pan';
+    else
+      controlText.innerHTML = 'Auto Follow';
+  });
+
+}
+</script>
+<script src="http://maps.googleapis.com/maps/api/js?sensor=false&extension=.js&output=embed"></script>

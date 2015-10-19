@@ -2,7 +2,8 @@ html, body {
   height: 100%;
 }
 .lemonaid-template {
-  padding: 60px 15px;
+  padding: 55px 0px 0px;
+  height: 100%;
 }
 
 .carousel,
@@ -15,7 +16,16 @@ html, body {
     height: 100%;
 }
 
+.timing {
+    text-align: center;
+    padding-top: 50px;
+}
 /* Background images are set within the HTML using inline CSS, not here */
+
+.container-fluid {
+    height: 100%;
+    padding: 0px;
+}
 
 .fill {
     width: 100%;
@@ -27,3 +37,49 @@ html, body {
     -o-background-size: cover;
 }
 
+.vcenter {
+    display: inline-block;
+    vertical-align: middle;
+    float: none;
+}
+
+#map-container { height: 100%; }
+
+.mph-value {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 30px;
+}
+
+.mph-units {
+    float: right;
+    font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.rpm-value {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 25px;
+}
+
+.rpm-units {
+    float: right;
+    font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.fill-height-or-more {
+  display: flex;
+  flex-direction: column;
+}
+
+.fill-height-or-more > div {
+  flex: 1;
+}
+
+@media (max-height: 800px) {
+    .hidden-800 {
+        display:none !important;
+    }
+}
+
+@media screen and (max-device-width: 1000px) and (orientation:landscape){
+   
+}

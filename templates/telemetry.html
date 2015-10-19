@@ -2,9 +2,19 @@
       <div class="lemonaid-template">
         <div id="alertTelemetry" class="alert alert-danger hide" role="alert"><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> Telemetry is not currently being received from Thomas</div>
         <div id="alertConnection" class="alert alert-danger hide" role="alert" ><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> Connection to server lost. Reconnecting...</div>
+        <div id="alertNoRace" class="alert alert-info hide"><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> There is currently no race information available</div>
         <div class="row">
-          <div class="col-xs-6"><div id="speedGauge"></div></div>
-          <div class="col-xs-6"><div id="rpmGauge"></div></div>
+          <div class="col-md-5"><div id="speedGauge"></div></div>
+          <div class="col-md-2">
+            <div class="timing">
+              <table class="table">
+                <tr><th scope="row">Best Lap:</th><td><span id="bestLap">-</span></td></tr>
+                <tr><th scope="row">Last Lap:</th><td><span id="lastLap">-</span></td></tr>
+                <tr><th scope="row">Laps:</th><td><span id="laps">-</span></td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="col-md-5"><div id="rpmGauge"></div></div>
         </div>
         <div class="row">
           <div class="col-xs-4"><div id="coolantGauge"></div></div>
@@ -21,7 +31,7 @@
             id: "speedGauge",
             value: 0,
             min: 0,
-            max: 130,
+            max: 100,
             title: "Speed",
             label: "MPH",
             relativeGaugeSize: true,
@@ -100,11 +110,18 @@
             $("#alertTelemetry").addClass('hide');
             window.clearTimeout(telemetryTimeout);
             telemetryTimeout = window.setTimeout(showTelemetryAlert, 2000);
-            speedGauge.refresh(data['Speed']);
-            rpmGauge.refresh(data['RPM']);
-            coolantGauge.refresh(data['CoolantTemp']);
-            voltageGauge.refresh(data['Voltage']);
-            intakeGauge.refresh(data['TempAirIntake']);
+            if (data['Type'] == "telemetry") {
+              speedGauge.refresh(data['Data']['Speed']);
+              rpmGauge.refresh(data['Data']['RPM']);
+              coolantGauge.refresh(data['Data']['CoolantTemp']);
+              voltageGauge.refresh(data['Data']['BatteryVoltage']);
+              intakeGauge.refresh(data['Data']['AirIntakeTemp']);
+            }
+            else if (data['Type'] == "timing") {
+              $("#bestLap").text(data['Data']['BestLap'])
+              $("#lastLap").text(data['Data']['LastLap'])
+              $("#laps").text(data['Data']['Laps'])
+            }
           }
         }
         connectWS();
