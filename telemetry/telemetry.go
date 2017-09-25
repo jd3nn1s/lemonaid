@@ -21,16 +21,13 @@ const (
 
 type Telemetry struct {
 	RPM           float32
-	InjectionTime float32
 	OilPressure   float32
 	Speed         float32
 
-	ConsumptionPerHr    float32
-	ConsumptionPer100km float32
+    FuelRemaining  float32
+    FuelLevel      uint8
 
-	DurationConsumption float32
-	DurationSpeed       float32
-
+    OilTemp float32
 	CoolantTemp    float32
 	AirIntakeTemp  float32
 	BatteryVoltage float32
@@ -40,20 +37,24 @@ type Telemetry struct {
 	Altitude      float32
 	Track         float32
 	GPSSpeed      float32
-	OilTemp       float32
-	FuelRemaining uint8
-	GasPedalAngle float32
+	GasPedalAngle uint8
+}
+
+type TelemetryWithStatus struct {
+	*Telemetry
+	WarningFields []string `json:",omitempty"`
+	ErrorFields []string `json:",omitempty"`
 }
 
 type Timing struct {
 	BestLap       JSONDuration
 	BestLapDriver string
 	LastLap       JSONDuration
-	LapCount      uint16
+	LapCount      int
 	DriverName    string
 
 	TeamAheadName     string
-	TeamAheadLapCount uint16
+	TeamAheadLapCount int
 	TeamAheadLastLap  JSONDuration
 	TeamAheadSplit    JSONDuration
 }
@@ -124,10 +125,10 @@ func (t Timing) JSONEncode() ([]byte, error) {
 	return json.Marshal(data)
 }
 
-func (t Telemetry) JSONEncode() ([]byte, error) {
+func (t TelemetryWithStatus) JSONEncode() ([]byte, error) {
 	data := struct {
 		Type string
-		Data Telemetry
+		Data TelemetryWithStatus
 	}{
 		"telemetry",
 		t,

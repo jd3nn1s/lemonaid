@@ -15,8 +15,7 @@ type NavItem struct {
 var NavItems = []NavItem{
 	{"/", "Home", "Thomas the (LeMon) Tank Engine"},
 	{"/about", "About", "About Thomas the LeMon"},
-	{"/dashboard", "Telemetry", "Telemetry Dashboard"},
-	{"/dashboard2", "Telemetry 2", "Telemetry Dashboard 2"},
+	{"/dashboard2", "Telemetry", "Telemetry Dashboard"},
 }
 
 type CarouselItem struct {
@@ -36,6 +35,9 @@ var CarouselItems = []CarouselItem{
 	{"/static/photos/car8.jpg", "\"That'll buff out\"", "Mission Failed. The fallen included radiator, wiring, engine mounts, frame and various body panels"},
 	{"/static/photos/car9.jpg", "Weld and Straighten", "Everything can be fixed with a bit of welding"},
 	{"/static/photos/car10.jpg", "Pick-n-Pull", "This white Jetta never saw us coming. We thank it for its contribution to Thomas' rebirth."},
+	{"/static/photos/car11.jpg", "Reborn", "Not looking to shabby after a bit of home-style body work!"},
+	{"/static/photos/car12.jpg", "Reborn", "Doesn't he look happy."},
+	{"/static/photos/car13.jpg", "Reborn", "Additional stickers were a must."},
 }
 
 func getCurrentPage(req *http.Request) *NavItem {

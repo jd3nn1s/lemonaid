@@ -30,16 +30,22 @@ type SyncedMessage struct {
 // contains the last received telemetry values so that it
 // can be sent to newly connecting clients between receives
 // of telemetry and any HTTP requests
-var lastTelemetry = telemetry.Telemetry{
-	Latitude:       35.488151852742455,
-	Longitude:      -119.53969199955463,
-	RPM:            4321,
-	Speed:          90,
-	CoolantTemp:    60,
-	OilTemp:        104,
-	BatteryVoltage: 11.3,
-	FuelRemaining:  90,
+var lastTelemetry = telemetry.TelemetryWithStatus{
+	Telemetry: &telemetry.Telemetry{
+		Latitude:       35.488151852742455,
+		Longitude:      -119.53969199955463,
+		RPM:            4321,
+		Speed:          90,
+		CoolantTemp:    60,
+		OilTemp:        104,
+		BatteryVoltage: 11.3,
+		FuelRemaining:  90,
+	},
+	WarningFields: []string{""},
+	ErrorFields:   []string{""},
 }
+
+var lastTimingTelemetry = telemetry.Timing{}
 
 // HTTP request handler for telemetry
 func TelemetryServer(w http.ResponseWriter, req *http.Request) {
@@ -99,11 +105,45 @@ func WebSocketIncomingHandler(w http.ResponseWriter, req *http.Request) {
 
 		if ok {
 			tempTelemetry.Speed = float32(int(tempTelemetry.Speed*0.6213712*10)) / 10
+			// add error/warning fields
+			var warnings []string
+			var errors []string
+
+			if tempTelemetry.FuelLevel < 5 {
+				errors = append(errors, []string{"FuelRemaining", "FuelLevel"}...)
+			} else if tempTelemetry.FuelLevel < 20 {
+				warnings = append(warnings, []string{"FuelRemaining", "FuelLevel"}...)
+			}
+
+			if tempTelemetry.CoolantTemp > 110 {
+				errors = append(errors, "CoolantTemp")
+			} else if tempTelemetry.CoolantTemp > 105 {
+				warnings = append(warnings, "CoolantTemp")
+			}
+
+			if tempTelemetry.BatteryVoltage < 11 {
+				errors = append(errors, "BatteryVoltage")
+			} else if tempTelemetry.BatteryVoltage < 12 {
+				warnings = append(warnings, "BatteryVoltage")
+			}
+
+			if tempTelemetry.OilTemp > 260 {
+				errors = append(errors, "OilTemp")
+			} else if tempTelemetry.OilTemp > 250 {
+				warnings = append(warnings, "OilTemp")
+			}
+
+			telemetryWithStatus := telemetry.TelemetryWithStatus{
+				&tempTelemetry,
+				warnings,
+				errors,
+			}
+
 			lock.Lock()
-			lastTelemetry = tempTelemetry
+			lastTelemetry = telemetryWithStatus
 			lock.Unlock()
 
-			b, err = tempTelemetry.JSONEncode()
+			b, err = telemetryWithStatus.JSONEncode()
 
 			if err != nil {
 				log.Println("Cannot JSON encode telemetry:", err)
@@ -159,7 +199,11 @@ func WebSocketOutgoingHandler(w http.ResponseWriter, req *http.Request, c <-chan
 			// send last telemetry frame when a new client connects
 			lock.RLock()
 			msg, err = lastTelemetry.JSONEncode()
+			msgTiming, errTiming := lastTimingTelemetry.JSONEncode()
 			lock.RUnlock()
+			if errTiming != nil {
+				conn.WriteMessage(websocket.TextMessage, msgTiming)
+			}
 
 			first = false
 
@@ -279,6 +323,25 @@ func main() {
 			}
 		}
 	}()
+
+	// connect to timing server
+	timingTelemetry := make(chan telemetry.Timing)
+	go func() {
+		for {
+			tmpTelemetry := <-timingTelemetry
+			lock.Lock()
+			lastTimingTelemetry = tmpTelemetry
+			lock.Unlock()
+			msg, err := tmpTelemetry.JSONEncode()
+			if err == nil {
+				log.Println("SENDING TO CHANNEL")
+				sendChannel <- msg
+			} else {
+				log.Println("ERROR", err)
+			}
+		}
+	}()
+	//go startLapTimes(timingTelemetry)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/telemetry", TelemetryServer).Methods("GET")

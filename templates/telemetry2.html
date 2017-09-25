@@ -33,7 +33,7 @@
             </tr>
             <tr class="success">
               <td>Fuel Remaining</td>
-              <td><span id="FuelRemaining">30</span>%</td>
+              <td><span id="FuelRemaining">30</span> Gallons</td>
             </tr>
             <tr class="info">
               <td>Gas Pedal Angle</td>
@@ -42,7 +42,7 @@
           </tbody>
         </table>
       </div>
-      <div class="row">
+<!--      <div class="row">
         <table class="table table-striped">
           <tbody id="TelemetryTable">
             <tr>
@@ -63,7 +63,7 @@
             </tr>
             <tr>
               <td>Team Ahead</td>
-              <td><span id="TeamAheadName">Buncha Cheaters</span></td>
+              <td><span id="TeamAheadName">-</span></td>
             </tr>
             <tr>
               <td>Laps</td>
@@ -79,16 +79,16 @@
             </tr>
           </tbody>
         </table>
-      </div>
+      </div> -->
     </div>
     <div class="col-sm-8 fill-height-or-more" style="height: 100%">
       <div id="map-container"></div>
       <div class="embed-responsive text-center">
-        <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/2aA2SHda-8M?start=986&autoplay=1" frameborder="0" allowfullscreen></iframe>
+        <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/Rf5zGnIuxa0" frameborder="0" allowfullscreen></iframe>
       </div>
     </div>
-  </div>
-</div>
+  </div> 
+</div> 
 <script>
 var url = 'ws://www.24hoursoflemonaid.com/ws/telemetry_out';
 var position = [35.488151852742455, -119.53969199955463];
@@ -154,6 +154,13 @@ function processTelemetry(data) {
   var lastWarning = null;
   var lastOK = null;
 
+  if (data["OilTemp"] !== undefined)
+    data["OilTemp"] = Math.round(data["OilTemp"] * 10) / 10;
+  if (data["CoolantTemp"] !== undefined)
+    data["CoolantTemp"] = Math.round(data["CoolantTemp"] * 10) / 10;
+  if (data["FuelRemaining"] !== undefined)
+    data["FuelRemaining"] = Math.round(data["FuelRemaining"] * 10) / 10;
+
   for (var i=0; i < l; i++) {
     var node = $("#" + tableFields[i]);
     var tr = node.parent().parent();
@@ -168,7 +175,7 @@ function processTelemetry(data) {
     else {
       node.text(data[tableFields[i]]);
       var fn = function (obj) {
-        return obj === fields[i];
+        return obj === tableFields[i];
       };
       if (data["ErrorFields"] !== undefined && data["ErrorFields"].filter(fn)[0]) {
         tr.addClass("danger");
