@@ -20,14 +20,14 @@ const (
 )
 
 type Telemetry struct {
-	RPM           float32
-	OilPressure   float32
-	Speed         float32
+	RPM         float32
+	OilPressure float32
+	Speed       float32
 
-    FuelRemaining  float32
-    FuelLevel      uint8
+	FuelRemaining float32
+	FuelLevel     uint8
 
-    OilTemp float32
+	OilTemp        float32
 	CoolantTemp    float32
 	AirIntakeTemp  float32
 	BatteryVoltage float32
@@ -43,7 +43,7 @@ type Telemetry struct {
 type TelemetryWithStatus struct {
 	*Telemetry
 	WarningFields []string `json:",omitempty"`
-	ErrorFields []string `json:",omitempty"`
+	ErrorFields   []string `json:",omitempty"`
 }
 
 type Timing struct {
