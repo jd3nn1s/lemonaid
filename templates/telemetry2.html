@@ -90,7 +90,15 @@
   </div> 
 </div> 
 <script>
-var url = 'ws://www.24hoursoflemonaid.com/ws/telemetry_out';
+var loc = window.location, url;
+if (loc.protocol === "https:") {
+    url = "wss:";
+} else {
+    url = "ws:";
+}
+url += "//" + loc.host;
+url += "/ws/telemetry_out";
+
 var position = [35.488151852742455, -119.53969199955463];
 var follow = true;
 var marker = null;
@@ -348,4 +356,4 @@ function FollowControl(controlDiv, map) {
 
 }
 </script>
-<script src="http://maps.googleapis.com/maps/api/js?sensor=false&extension=.js&output=embed"></script>
+<script src="http://maps.googleapis.com/maps/api/js?sensor=false&extension=.js&output=embed&key=AIzaSyC3qr447nUUz7vSvQWvpJhPaW5dzinSfts"></script>

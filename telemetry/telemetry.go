@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+	"unsafe"
 )
 
 // same definition and order as common.h in jd3nn1s/nerdobd2
@@ -134,4 +135,10 @@ func (t TelemetryWithStatus) JSONEncode() ([]byte, error) {
 		t,
 	}
 	return json.Marshal(data)
+}
+
+func MaxTelemetrySize() int {
+	var hdr Header
+	var t Telemetry
+	return int(unsafe.Sizeof(hdr) + unsafe.Sizeof(t))
 }
